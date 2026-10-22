@@ -43,7 +43,7 @@ public class InscripcionServiceImpl implements InscripcionService {
 
     @Override
     @Transactional
-    public InscripcionResponse save(Inscripcion inscripcion) { // 🟢 Modificado: Parámetro mapeado a Entidad
+    public InscripcionResponse save(Inscripcion inscripcion) {
         boolean tieneCurso = inscripcion.getCurso() != null && inscripcion.getCurso().getId() != null;
         boolean tieneDiplomado = inscripcion.getDiplomado() != null && inscripcion.getDiplomado().getId() != null;
         
@@ -80,6 +80,15 @@ public class InscripcionServiceImpl implements InscripcionService {
             if (inscritos >= curso.getCupoMaximo()) {
                 throw new IllegalStateException("El curso ha alcanzado su cupo máximo de " + curso.getCupoMaximo());
             }
+
+            // ⬇️ VALIDACIÓN DE CRUCE DE HORARIO (NUEVO) ⬇️
+            if (curso.getHorario() != null) {
+                java.util.List<Inscripcion> choques = inscripcionRepository.buscarChoqueHorario(cliente.getId(), curso.getHorario());
+                if (!choques.isEmpty()) {
+                    throw new IllegalStateException("El cliente ya tiene una actividad registrada en el horario: " + curso.getHorario());
+                }
+            }
+
             inscripcion.setCurso(curso);
             inscripcion.setMonto(curso.getCosto());
         }
@@ -97,6 +106,15 @@ public class InscripcionServiceImpl implements InscripcionService {
             if (inscritos >= diplomado.getCupoMaximo()) {
                 throw new IllegalStateException("El diplomado ha alcanzado su cupo máximo de " + diplomado.getCupoMaximo());
             }
+
+            // ⬇️ VALIDACIÓN DE CRUCE DE HORARIO (NUEVO) ⬇️
+            if (diplomado.getHorario() != null) {
+                java.util.List<Inscripcion> choques = inscripcionRepository.buscarChoqueHorario(cliente.getId(), diplomado.getHorario());
+                if (!choques.isEmpty()) {
+                    throw new IllegalStateException("El cliente ya tiene una actividad registrada en el horario: " + diplomado.getHorario());
+                }
+            }
+
             inscripcion.setDiplomado(diplomado);
             inscripcion.setMonto(diplomado.getCosto());
         }
@@ -139,6 +157,7 @@ public class InscripcionServiceImpl implements InscripcionService {
             if (Boolean.FALSE.equals(curso.getActivo())) {
                 throw new IllegalStateException("El curso está inactivo");
             }
+            
             if (inscripcionExistente.getCurso() == null
                     || !inscripcionExistente.getCurso().getId().equals(curso.getId())) {
                 long inscritos = inscripcionRepository.countByCursoIdAndEstadoNot(
@@ -146,7 +165,19 @@ public class InscripcionServiceImpl implements InscripcionService {
                 if (inscritos >= curso.getCupoMaximo()) {
                     throw new IllegalStateException("El curso ha alcanzado su cupo máximo");
                 }
+
+                // ⬇️ VALIDACIÓN DE CRUCE DE HORARIO EN UPDATE (NUEVO) ⬇️
+                if (curso.getHorario() != null) {
+                    java.util.List<Inscripcion> choques = inscripcionRepository.buscarChoqueHorario(cliente.getId(), curso.getHorario());
+                    // Si hay choques, pero el choque no es la misma inscripción que estoy editando, lanzo error
+                    for (Inscripcion ch : choques) {
+                        if (!ch.getId().equals(inscripcionExistente.getId())) {
+                            throw new IllegalStateException("El cliente ya tiene una actividad registrada en el horario: " + curso.getHorario());
+                        }
+                    }
+                }
             }
+            
             inscripcionExistente.setCurso(curso);
             inscripcionExistente.setDiplomado(null);
             inscripcionExistente.setMonto(curso.getCosto());
@@ -159,6 +190,7 @@ public class InscripcionServiceImpl implements InscripcionService {
             if (Boolean.FALSE.equals(diplomado.getActivo())) {
                 throw new IllegalStateException("El diplomado está inactivo");
             }
+            
             if (inscripcionExistente.getDiplomado() == null
                     || !inscripcionExistente.getDiplomado().getId().equals(diplomado.getId())) {
                 long inscritos = inscripcionRepository.countByDiplomadoIdAndEstadoNot(
@@ -166,7 +198,18 @@ public class InscripcionServiceImpl implements InscripcionService {
                 if (inscritos >= diplomado.getCupoMaximo()) {
                     throw new IllegalStateException("El diplomado ha alcanzado su cupo máximo");
                 }
+
+                // ⬇️ VALIDACIÓN DE CRUCE DE HORARIO EN UPDATE (NUEVO) ⬇️
+                if (diplomado.getHorario() != null) {
+                    java.util.List<Inscripcion> choques = inscripcionRepository.buscarChoqueHorario(cliente.getId(), diplomado.getHorario());
+                    for (Inscripcion ch : choques) {
+                        if (!ch.getId().equals(inscripcionExistente.getId())) {
+                            throw new IllegalStateException("El cliente ya tiene una actividad registrada en el horario: " + diplomado.getHorario());
+                        }
+                    }
+                }
             }
+            
             inscripcionExistente.setDiplomado(diplomado);
             inscripcionExistente.setCurso(null);
             inscripcionExistente.setMonto(diplomado.getCosto());
