@@ -1,138 +1,127 @@
-# Spring Cátedra -- Fase 2: Primer Avance
+
+# Spring Cátedra — Fase 3
 
 ## 1. Descripción del sistema
 
-**Spring Cátedra** es el backend de un sistema para la gestión de los
-servicios de un centro de formación, desarrollado como parte del
-proyecto académico. Expone una API REST construida con **Java 21** y
-**Spring Boot**, con persistencia mediante **JPA/Hibernate**,
-validaciones con Jakarta Validation, manejo centralizado de
-excepciones, autenticación con **JWT** y documentación de los
-endpoints mediante **Swagger/OpenAPI**.
+**Spring Cátedra** (UCA-CFC Connect) es el backend de un sistema empresarial para la gestión de los servicios del Centro de Formación Continua. Expone una API REST construida con **Java 21** y **Spring Boot**, con persistencia mediante **JPA/Hibernate**, validaciones con Jakarta Validation, manejo centralizado de excepciones, autenticación y autorización con **Spring Security + JWT**, y documentación de los endpoints mediante **Swagger/OpenAPI**.
 
-El sistema contempla los módulos de clientes, cursos, diplomados,
-docentes, inscripciones, espacios, equipamiento, catering,
-cotizaciones, reservas, solicitudes, pagos y usuarios.
+El sistema contempla los módulos de:
 
-La arquitectura separa responsabilidades en controladores, servicios,
-implementaciones, repositorios, modelos y objetos de transferencia de
-datos (DTOs Request/Response), siguiendo el flujo:
+- Gestión académica (cursos, diplomados, categorías, modalidades, docentes)
+- Clientes e inscripciones
+- Cotizaciones
+- Alquiler de espacios y equipamiento
+- Servicios y solicitudes de catering
+- Agenda / reservas (con control de conflictos de horario)
+- Pagos
+- Usuarios, roles y seguridad
+
+La arquitectura separa responsabilidades siguiendo el flujo:
 
 ```text
 Controller → Service → Implementation → Repository → Base de datos
 ```
 
-------------------------------------------------------------------------
+Se utilizan DTOs (`Request` / `Response`) y MapStruct para el mapeo entre capas.
+
+---
 
 ## 2. Requisitos para ejecutar el proyecto
 
 - **Java JDK 21**
-- **Maven** (el proyecto incluye Maven Wrapper: `mvnw` y `mvnw.cmd`,
-  no es obligatorio tener Maven instalado aparte)
-- IDE compatible con proyectos Maven (IntelliJ IDEA, Eclipse, VS Code)
-- Git, para clonar y trabajar con el repositorio
+- **Maven** (el proyecto incluye Maven Wrapper: `mvnw` / `mvnw.cmd`)
+- IDE compatible con Maven (IntelliJ IDEA, Eclipse, NetBeans, VS Code)
+- **Microsoft SQL Server**
+- Git
 
 ### Dependencias principales
 
 Definidas en `pom.xml`:
 
 - Spring Boot Starter Data JPA
-- Spring Boot Starter Web MVC
+- Spring Boot Starter Web
 - Spring Boot Starter Validation
 - Spring Boot Starter Security
 - SpringDoc OpenAPI (Swagger)
-- H2 Database
+- Microsoft SQL Server JDBC Driver
 - MapStruct
 - Lombok
 - JJWT (JSON Web Token)
+- JUnit 5 + Mockito (pruebas unitarias)
 
-------------------------------------------------------------------------
+---
 
 ## 3. Configuración de la base de datos
 
-La persistencia del sistema se administra de forma desacoplada mediante **JPA / Hibernate**. La configuración base se encuentra en:
+La configuración se encuentra en:
 
 ```text
 src/main/resources/application.properties
 ```
 
-### 3.1 Base de datos en desarrollo (H2 en memoria)
+### 3.1 Base de datos principal (Microsoft SQL Server)
 
-Para el desarrollo y las pruebas en laboratorio, el proyecto utiliza **H2 Database** embebida. Al no definir propiedades de conexión externas, Spring Boot crea la base de datos automáticamente en la **memoria RAM** al iniciar la aplicación.
+El proyecto está configurado para trabajar con **Microsoft SQL Server**.
 
-Características importantes:
-
-- **No existe un archivo físico** (`.db` o similar) dentro del proyecto. H2 se incluye como dependencia Maven y opera en memoria.
-- **Comportamiento volátil:** los datos viven únicamente mientras la aplicación esté en ejecución. Al detener el servidor, la memoria se libera y las tablas desaparecen.
-- **Esquema generado por JPA:** Hibernate crea las tablas a partir de las entidades del paquete `sv.edu.udb.model`.
-- **Siembra automática:** en cada arranque, los componentes `RoleInitializer` y `AdminInitializer` registran los roles del sistema (`ADMIN`, `RECEPCIONISTA`, `CLIENTE`, `CONTABILIDAD`) y el usuario administrador inicial.
-
-### 3.2 Script de base de datos / Plano de producción (Microsoft SQL Server)
-
-Aunque en desarrollo se usa H2 en memoria, el entregable exige un **script o respaldo de la base de datos**. Por esa razón se incluye el plano estructural (DDL) en:
+1. Crear la base de datos (si aún no existe).
+2. Ejecutar el script de estructura ubicado en:
 
 ```text
-database/SpringCatedra.sql
+src/database/SpringCatedra.sql
 ```
 
-Este script está escrito con sintaxis de **Microsoft SQL Server** (`IDENTITY(1,1)`, `DATETIME2`, etc.) y representa el diseño de la base de datos para un entorno de producción.
-
-**Justificación técnica:**
-
-Gracias a la abstracción de **Spring Data JPA / Hibernate**, la arquitectura está desacoplada del motor de base de datos. Migrar a producción no requiere modificar ninguna clase Java: basta con:
-
-1. Ejecutar el script `database/SpringCatedra.sql` en un servidor Microsoft SQL Server.
-2. Actualizar las propiedades de conexión en `application.properties`:
+3. Configurar las credenciales en `application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:sqlserver://LOCALHOST_O_IP:1433;databaseName=CatedraDB;encrypt=true;trustServerCertificate=true;
-spring.datasource.username=TU_USUARIO_SQL
-spring.datasource.password=TU_CONTRASEÑA_SQL
-spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=SPRING_CATEDRA;encrypt=true;trustServerCertificate=true;
+spring.datasource.username=TU_USUARIO
+spring.datasource.password=TU_CONTRASEÑA
+spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
+spring.jpa.database-platform=org.hibernate.dialect.SQLServerDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
 ```
 
-De esta forma se cumple el requisito de entregar un script de base de datos, manteniendo al mismo tiempo un entorno de desarrollo ligero y ágil con H2.
+> **Nota:** Ajusta el nombre de la base de datos, el puerto y las credenciales según tu entorno local.
 
-------------------------------------------------------------------------
+### 3.2 Roles y usuario inicial
+
+Al iniciar la aplicación se ejecutan los componentes:
+
+- `RoleInitializer` → crea los roles: `ADMIN`, `RECEPCIONISTA`, `CLIENTE`, `CONTABILIDAD`
+- `AdminInitializer` → crea el usuario administrador inicial
+
+---
 
 ## 4. Instrucciones de ejecución
 
 ### 4.1 Clonar el repositorio
 
 ```bash
-git clone [URL_DEL_REPOSITORIO]
-cd spring-catedra
+git clone https://github.com/HectorJ52/ProyectoDWF1.git
+cd ProyectoDWF1
 ```
 
-### 4.2 Configurar la base de datos (si aplica)
+### 4.2 Configurar la base de datos
 
-1. Crear la base de datos, si se usará una distinta a H2 en memoria.
-2. Ejecutar el script `database/SpringCatedra.sql`, si aplica.
-3. Configurar credenciales y URL de conexión en `application.properties`.
-4. Verificar que el servidor de base de datos esté activo.
-
-Si no se configura ninguna base de datos externa, el proyecto arranca
-igual usando H2 en memoria, sin pasos adicionales.
+1. Asegúrate de que SQL Server esté en ejecución.
+2. Ejecuta el script `src/database/SpringCatedra.sql` (si es necesario).
+3. Verifica/ajusta las credenciales en `application.properties`.
 
 ### 4.3 Ejecutar el proyecto
 
-En Windows:
-
+**Windows:**
 ```bash
 mvnw.cmd spring-boot:run
 ```
 
-En Linux/macOS:
-
+**Linux / macOS:**
 ```bash
 ./mvnw spring-boot:run
 ```
 
-También puede ejecutarse directamente la clase principal:
+También puedes ejecutar la clase principal:
 
 ```text
 sv.edu.udb.SpringCatedraApplication
@@ -142,28 +131,69 @@ sv.edu.udb.SpringCatedraApplication
 
 Una vez iniciada la aplicación:
 
-```text
-http://localhost:8080/swagger-ui/index.html
+- Swagger UI:  
+  `http://localhost:8080/swagger-ui/index.html`
+
+- OpenAPI JSON:  
+  `http://localhost:8080/v3/api-docs`
+
+---
+
+## 5. Seguridad
+
+El sistema utiliza:
+
+- **Spring Security**
+- **JWT** (JSON Web Token) para autenticación sin estado
+- Control de acceso por roles
+
+### Roles del sistema
+
+| Rol            | Descripción principal                          |
+|----------------|------------------------------------------------|
+| ADMIN          | Configuración completa del sistema             |
+| RECEPCIONISTA  | Operaciones diarias (inscripciones, reservas…) |
+| CLIENTE        | Consultas y solicitudes propias                |
+| CONTABILIDAD   | Gestión y validación de pagos                  |
+
+### Autenticación
+
+- Endpoint de login: `POST /api/auth/login`
+- Se debe enviar usuario/correo y contraseña.
+- La respuesta incluye el token JWT que debe enviarse en el header:
+
+```http
+Authorization: Bearer <token>
 ```
 
-Documentación OpenAPI en formato JSON:
+---
 
-```text
-http://localhost:8080/v3/api-docs
+## 6. Pruebas unitarias
+
+Se implementaron pruebas unitarias con **JUnit 5** y **Mockito**, enfocadas en la lógica de negocio más crítica:
+
+- Módulo de **Reservas de Espacio**
+- Validación de disponibilidad / solapamiento de horarios
+- Casos de éxito y de fallo (lanzamiento de `EspacioOcupadoException`)
+
+Para ejecutar las pruebas:
+
+```bash
+mvn test
 ```
 
-------------------------------------------------------------------------
+O de forma específica:
 
-## 5. Estructura de paquetes
+```bash
+mvn test -Dtest=ReservaEspacioServiceTest
+```
 
-El código fuente principal se encuentra en:
+---
+
+## 7. Estructura de paquetes
 
 ```text
 src/main/java/sv/edu/udb/
-```
-
-```text
-sv.edu.udb
 ├── config
 │   ├── AdminInitializer
 │   ├── OpenApiConfig
@@ -172,33 +202,18 @@ sv.edu.udb
 │
 ├── controller
 │   ├── AuthController
-│   ├── CategoriaController
-│   ├── ClienteController
-│   ├── CotizacionController
-│   ├── CursoController
-│   ├── DetalleCotizacionController
-│   ├── DiplomadoController
-│   ├── DocenteController
-│   ├── EquipamientoController
-│   ├── EspacioController
-│   ├── InscripcionController
-│   ├── ModalidadController
-│   ├── PagoController
-│   ├── ReservaEspacioController
-│   ├── ServicioCateringController
-│   ├── SolicitudCateringController
-│   └── UsuarioController
-│   ├── request      (DTOs de entrada)
-│   └── response     (DTOs de salida)
+│   ├── ... (demás controladores)
+│   ├── request/          ← DTOs de entrada
+│   └── response/         ← DTOs de salida
 │
 ├── exception
 │   ├── EspacioOcupadoException
 │   ├── GlobalExceptionHandler
 │   └── SaldoInsuficienteException
 │
-├── implementation   (implementaciones de los servicios)
-├── model             (entidades JPA)
-├── repository        (interfaces Spring Data JPA)
+├── implementation        ← Implementaciones de los servicios
+├── model                 ← Entidades JPA
+├── repository            ← Interfaces Spring Data JPA
 │
 ├── security
 │   ├── CustomUserDetailsService
@@ -206,21 +221,19 @@ sv.edu.udb
 │   └── JwtService
 │
 └── service
-    └── mapper        (mappers MapStruct)
+    └── mapper/           ← Mappers MapStruct
 ```
 
-Los modelos representan las entidades persistentes; los objetos
-`Request` y `Response` separan los datos de entrada y salida de los
-controladores, y los `mapper` convierten entre entidades y DTOs.
+---
 
-------------------------------------------------------------------------
+## 8. Integrantes y responsabilidades
 
-## 6. Integrantes y responsabilidades
+| Integrante                                      | Responsabilidad principal (Fase 3)          |
+|------------------------------------------------|---------------------------------------------|
+| Joaquín Enmanuel Ayala Orellana — AO250420     | Base de datos (SQL Server) + configuración  |
+| Héctor Gabriel Juárez Melgar — JM252298        | Lógica de agenda y conflictos de horario    |
+| Brandon Eliel Bernal Rodríguez — BR253266      | Pruebas unitarias (JUnit + Mockito)         |
+| Jonathan Manuel Valencia Ugarte — VU253065     | Seguridad (JWT + control de roles)          |
+| Brandon Steven Reyes Reyes — RR241992          | Documentación y entregable final            |
 
-| Integrante                                | Responsabilidad               |
-|-------------------------------------------|-------------------------------|
-| Joaquín Enmanuel Ayala Orellana. AO250420 | Gestión académica, script SQL |
-| Héctor Gabriel Juárez Melgar.    JM252298 | Clientes e inscripciones      |
-| Brandon Eliel Bernal Rodriguez. BR253266  | Cotizaciones                  |
-| Jonathan Manuel Valencia Ugarte. VU253065 | Espacios y catering           |
-| Brandon Steven Reyes Reyes. RR241992      | Pagos y seguridad             |
+---
