@@ -22,28 +22,67 @@ public class AdminInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        if (usuarioRepository.findByUsername("admin").isPresent()) {
+        // Crear los 4 usuarios de prueba (uno por cada rol)
+        crearUsuarioSiNoExiste(
+                "admin",
+                "admin@catedra.com",
+                "Admin123!",
+                Rol.NombreRol.ADMIN
+        );
+
+        crearUsuarioSiNoExiste(
+                "recepcion",
+                "recepcion@catedra.com",
+                "Recepcion123!",
+                Rol.NombreRol.RECEPCIONISTA
+        );
+
+        crearUsuarioSiNoExiste(
+                "cliente1",
+                "cliente@catedra.com",
+                "Cliente123!",
+                Rol.NombreRol.CLIENTE
+        );
+
+        crearUsuarioSiNoExiste(
+                "contabilidad",
+                "conta@catedra.com",
+                "Conta123!",
+                Rol.NombreRol.CONTABILIDAD
+        );
+    }
+
+    private void crearUsuarioSiNoExiste(
+            String username,
+            String correo,
+            String passwordPlano,
+            Rol.NombreRol nombreRol
+    ) {
+        // Si ya existe, no lo vuelve a crear
+        if (usuarioRepository.findByUsername(username).isPresent()) {
             return;
         }
 
-        Rol rolAdmin = rolRepository
-                .findByNombre(Rol.NombreRol.ADMIN)
+        // Buscar el rol
+        Rol rol = rolRepository
+                .findByNombre(nombreRol)
                 .orElseThrow(() ->
                         new IllegalStateException(
-                                "El rol ADMIN no existe"
+                                "El rol " + nombreRol + " no existe. Revisa RoleInitializer."
                         )
                 );
 
-        Usuario admin = Usuario.builder()
-                .username("admin")
-                .correo("admin@catedra.com")
-                .password(
-                        passwordEncoder.encode("Admin123!")
-                )
+        // Crear el usuario con la contraseña encriptada
+        Usuario usuario = Usuario.builder()
+                .username(username)
+                .correo(correo)
+                .password(passwordEncoder.encode(passwordPlano))
                 .activo(true)
-                .rol(rolAdmin)
+                .rol(rol)
                 .build();
 
-        usuarioRepository.save(admin);
+        usuarioRepository.save(usuario);
+
+        System.out.println("Usuario creado: " + username + " (" + nombreRol + ")");
     }
 }
