@@ -1,0 +1,450 @@
+:root {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #17243b;
+    background: #f3f6fb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* LOGIN */
+
+.login-view {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #101d35, #28558a);
+}
+
+.login-card {
+    background: white;
+    width: 100%;
+    max-width: 420px;
+    padding: 38px;
+    border-radius: 18px;
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.2);
+}
+
+.brand-icon,
+.small-logo {
+    display: grid;
+    place-items: center;
+    background: #2563eb;
+    color: white;
+    font-weight: bold;
+    border-radius: 12px;
+}
+
+.brand-icon {
+    width: 55px;
+    height: 55px;
+    font-size: 20px;
+}
+
+.login-card h1 {
+    margin-bottom: 8px;
+}
+
+.login-card p {
+    color: #64748b;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+    color: #17243b;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #93c5fd;
+}
+
+button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+.primary {
+    color: white;
+    background: #2563eb;
+}
+
+.primary:hover {
+    background: #1d4ed8;
+}
+
+.secondary {
+    color: #243653;
+    background: #e8eef7;
+}
+
+.secondary:hover {
+    background: #d8e4f5;
+}
+
+.full {
+    width: 100%;
+    margin-top: 25px;
+}
+
+.message {
+    min-height: 20px;
+    font-size: 13px;
+}
+
+/* ESTRUCTURA */
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #12213a;
+    color: white;
+    padding: 24px 15px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 10px 25px;
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.small-logo {
+    width: 43px;
+    height: 43px;
+}
+
+.menu-label {
+    color: #91a4c0;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin: 15px 12px;
+}
+
+.sidebar nav button {
+    display: block;
+    width: 100%;
+    margin: 4px 0;
+    padding: 12px;
+    text-align: left;
+    color: #cdd8ea;
+    background: transparent;
+}
+
+.sidebar nav button:hover,
+.sidebar nav button.active {
+    background: #284268;
+    color: white;
+}
+
+.logout {
+    width: 100%;
+    margin-top: 25px;
+    background: #334862;
+    color: white;
+}
+
+.logout:hover {
+    background: #475e7c;
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+    padding: 30px;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.topbar h1 {
+    margin: 0 0 8px;
+}
+
+.topbar p {
+    margin: 0;
+    color: #64748b;
+}
+
+.user-pill {
+    background: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    text-align: right;
+}
+
+.user-pill span {
+    display: block;
+    font-weight: bold;
+}
+
+.user-pill small {
+    color: #64748b;
+}
+
+/* DASHBOARD */
+
+.welcome,
+.stat,
+.table-card,
+.editor {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 3px 15px #152a4510;
+}
+
+.welcome {
+    background: linear-gradient(120deg, #1e40af, #3680e6);
+    color: white;
+}
+
+.welcome h2 {
+    margin-top: 0;
+}
+
+.welcome p {
+    color: #e0eaff;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat {
+    min-width: 190px;
+}
+
+.stat span {
+    display: block;
+    color: #64748b;
+}
+
+.stat strong {
+    display: block;
+    margin-top: 12px;
+    font-size: 30px;
+}
+
+.stat .online {
+    color: #16a34a;
+    font-size: 21px;
+}
+
+/* TABLAS */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e5eaf1;
+    font-size: 13px;
+}
+
+th {
+    background: #f8fafc;
+    color: #475569;
+}
+
+td button {
+    margin: 2px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.muted {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.pagination,
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+/* FORMULARIOS */
+
+.editor {
+    margin-top: 20px;
+}
+
+.editor h2 {
+    margin-top: 0;
+}
+
+#recordFields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 20px;
+    margin-bottom: 20px;
+}
+
+.field-group {
+    min-width: 0;
+}
+
+.field-group label {
+    display: block;
+}
+
+.field-group input,
+.field-group select {
+    width: 100%;
+}
+
+#recordJson {
+    font-family: Consolas, monospace;
+    min-height: 220px;
+    resize: vertical;
+}
+
+.notice {
+    padding: 14px;
+    margin-bottom: 18px;
+    background: #dbeafe;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+}
+
+.notice.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+    .app-layout {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .sidebar nav {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .sidebar nav button {
+        width: auto;
+    }
+
+    .main {
+        padding: 18px;
+    }
+
+    .topbar {
+        flex-wrap: wrap;
+    }
+
+    .stats {
+        flex-wrap: wrap;
+    }
+
+    #recordFields {
+        grid-template-columns: 1fr;
+    }
+}
+
+#recordFields select {
+    width: 100%;
+    min-height: 45px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+}
+
+#recordFields select[multiple] {
+    min-height: 130px;
+}
+
+#recordFields input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #2563eb;
+}
+
+#recordFields .field-group {
+    min-width: 0;
+}
+
