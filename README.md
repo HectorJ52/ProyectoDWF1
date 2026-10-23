@@ -67,7 +67,7 @@ El proyecto está configurado para trabajar con **Microsoft SQL Server**.
 2. Ejecutar el script de estructura ubicado en:
 
 ```text
-src/database/SpringCatedra.sql
+SpringCatedra.sql
 ```
 
 3. Configurar las credenciales en `application.properties`:
@@ -106,7 +106,7 @@ cd ProyectoDWF1
 ### 4.2 Configurar la base de datos
 
 1. Asegúrate de que SQL Server esté en ejecución.
-2. Ejecuta el script `src/database/SpringCatedra.sql` (si es necesario).
+2. Ejecuta el script `SpringCatedra.sql` (si es necesario).
 3. Verifica/ajusta las credenciales en `application.properties`.
 
 ### 4.3 Ejecutar el proyecto
